@@ -1,7 +1,8 @@
 import {createStore, combineReducers, applyMiddleware} from 'redux';
+import {subspace, namespaced} from 'redux-subspace';
 import {createLogger} from 'redux-logger';
 import thunk from 'redux-thunk';
-import main from './StaticReducers/main';
+import main from './StaticReducer';
 
 const logger = createLogger();
 
@@ -40,11 +41,15 @@ const createReducerManager = (initialReducers) => {
         return
       }
 
-      // Add the reducer to the reducer mapping
-      reducers[key] = reducer
+      // Add the reducer to the reducer mapping and namespace it
+      reducers[key] = namespaced(key)(reducer);
+
+      // subspace reducer
+      store.dynamicReducers[key] = subspace((state) => state[key], key)(store);
 
       // Generate a new combined reducer
-      combinedReducer = combineReducers(reducers)
+      combinedReducer = combineReducers(reducers);
+      store.dispatch({type: '@@redux/ADD_REDUCER'});
     },
 
     // Removes a reducer with the specified key
@@ -59,8 +64,12 @@ const createReducerManager = (initialReducers) => {
       // Add the key to the list of keys to clean up
       keysToRemove.push(key)
 
+      // remove subspaced link
+      delete store.dynamicReducers[key];
+
       // Generate a new combined reducer
       combinedReducer = combineReducers(reducers)
+      store.dispatch({type: '@@redux/DELETE_REDUCER'});
     }
   }
 }
@@ -69,12 +78,17 @@ const staticReducers = {
   main
 }
 
-const reducerManager = createReducerManager(staticReducers);
+export const reducerManager = createReducerManager(staticReducers);
+
+export const dynamicReducers = {};
 
   // Create a store with the root reducer function being the one exposed by the manager.
 const store = createStore(reducerManager.reduce, applyMiddleware(thunk, logger));
 
   // Optional: Put the reducer manager on the store so it is easily accessible
 store.reducerManager = reducerManager;
+
+  // subspaced dynamic reducers will be accessible here
+store.dynamicReducers = dynamicReducers;
 
 export default store;

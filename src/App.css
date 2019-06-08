@@ -1,8 +1,23 @@
+button {
+  margin: 5px;
+}
+
 .static-action-buttons {
   margin: 10px;
 }
 .color-box {
-  margin: 10px;
+  margin: 15px;
   width: 100px;
   height: 100px;
+}
+
+.dynamic-components {
+  margin: 10px;
+}
+
+.dynamic-component {
+  width: 300px;
+  height: 100px;
+  margin: 10px 5px;
+  padding: 10px;
 }

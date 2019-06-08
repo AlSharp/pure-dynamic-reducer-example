@@ -1,9 +1,11 @@
 import React from 'react';
 import {connect} from 'react-redux';
-import reducer from './DynamicReducer';
+import DynamicComponent from './DynamicReducer/component';
 import './App.css';
 
-import {handleColorChange} from './actions/mainActions';
+import {handleColorChange} from './StaticReducer/actions';
+
+import {handleDynamicComponentAdd} from './DynamicReducer/actions';
 
 const App = props => {
   return (
@@ -29,13 +31,15 @@ const App = props => {
           [1, 2, 3].map((number, index) =>
             <button
               key={index}
-              onClick={e => {
-                props.store.reducerManager.add(e.target.textContent, reducer);
-                props.store.dispatch({type: '@@DYNAMIC_REDUCER_ADD'});
-              }}
+              onClick={handleDynamicComponentAdd}
             >
               {`dynamicReducer${number}`}
             </button>  
+          )
+        }
+        {
+          props.dynamicComponents.map((component, index) =>
+            <DynamicComponent component={component} key={index} />
           )
         }
       </div>
@@ -44,8 +48,15 @@ const App = props => {
 }
 
 const mapStateToProps = state => {
-  console.log(state);
+  const dynamicComponents = Object.keys(state)
+    .filter(key => (/^dynamicReducer([0-9]+)$/).test(key))
+    .map(dynamicReducer => (
+      {
+        reducerName: dynamicReducer
+      }
+    ))
   return {
+    dynamicComponents,
     boxColor: state.main.boxColor
   }
 }
@@ -53,6 +64,7 @@ const mapStateToProps = state => {
 export default connect(
   mapStateToProps,
   {
-    handleColorChange
+    handleColorChange,
+    handleDynamicComponentAdd
   }
 )(App)
